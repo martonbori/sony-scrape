@@ -1,10 +1,11 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
+
 
 @dataclass
 class HeadPhone:
     name: str
-    price: int|float
+    price: int | float
     mpn: str
     url: str
-
-    
