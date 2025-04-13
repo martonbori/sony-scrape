@@ -3,45 +3,79 @@ from __future__ import annotations
 import logging
 import sys
 
+import pandas
 import requests
-from bs4 import BeautifulSoup
+
+from data import Product
 
 # Set up logging
 log = logging.getLogger(__name__)
 
-BASE = 'https://www.sony.co.uk/store/search?query=:relevance:normalSearch:true'
+API_BASE = 'https://www.sony.co.uk/commerceapi/rest/v2/sony-uk/products/'
+STORE_BASE = 'https://www.sony.co.uk/store'
 
 
-class Scraper:
-    def __init__(self, base_url=BASE, filters=['audio', 'headphones']):
+class ProductScraper:
+    def __init__(
+        self,
+        api_base=API_BASE,
+        store_base_url=STORE_BASE,
+        filters=['audio', 'headphones'],
+    ):
         filter = ':'.join([f"category:gwx-{filt}" for filt in filters])
-        self.url = ':'.join([base_url, filter])
+        query = f':relevance:normalSearch:true:{filter}'
+        search_term = f"search?query={query}&pageSize=12&lang=en_GB&curr=GBP"
+
+        self.api_url = ''.join([api_base, search_term])
+        self.store_url = store_base_url
+        self.products = []
 
     def get_products(self, response):
-        soup = BeautifulSoup(response.text, 'html.parser')
-        products = soup.find_all('sn-product-grid-item')
+        full_products = response.json()['products']
+        products = []
+        for fp in full_products:
+            if ('price' in fp):
+                price = fp['price']['value']
+            else:
+                price = 0
+
+            product = Product(
+                name=fp['name'],
+                price=price,
+                mpn=fp['code'],
+                url=f"{self.store_url}{fp['url']}",
+            )
+            products.append(product)
         return products
 
-    def parse_products(self, products):
-        for product in products:
-            log.info(product.prettify())
-            break
+    def export_to_csv(self, file_path):
+        dataframe = pandas.DataFrame(self.products)
+        dataframe.to_csv(file_path, index=False)
+        log.info(f"Data exported to {file_path}")
 
     def __call__(self):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         }
-        page = 0
-        status = 200
-        while status == 200:
+
+        log.info('Fetching products...')
+        pagination = requests.get(
+            f"{self.api_url}&fields=pagination(DEFAULT)", headers=headers,
+        ).json()['pagination']
+
+        log.info(f"Found {pagination['totalResults']} product.")
+        for i in range(pagination['totalPages']):
+            log.info(f"Fetching page {i}...")
+            product_fields = ['name', 'price(value)', 'code', 'url']
             response = requests.get(
-                f"{self.url}&currentPage={page}", headers=headers,
+                f"{self.api_url}"
+                f"&fields=products({','.join(product_fields)})"
+                f"&currentPage={i}",
+                headers=headers,
             )
             products = self.get_products(response=response)
-            _ = self.parse_products(products=products)
-            status = response.status_code
-            log.info(status)
-            page += 1
+            log.info(f"Extracted {len(products)} product.")
+            self.products.extend(products)
 
         return self
 
@@ -57,5 +91,6 @@ if __name__ == '__main__':
 
     log.addHandler(handler)
 
-    product_scraper = Scraper()
+    product_scraper = ProductScraper()
     product_scraper = product_scraper()
+    product_scraper.export_to_csv('headphones.csv')

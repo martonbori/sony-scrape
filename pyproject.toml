@@ -9,8 +9,8 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "requests (>=2.32.3,<3.0.0)",
-    "beautifulsoup4 (>=4.13.3,<5.0.0)",
-    "mypy (>=1.15.0,<2.0.0)"
+    "mypy (>=1.15.0,<2.0.0)",
+    "pandas (>=2.2.3,<3.0.0)"
 ]
 
 
@@ -21,3 +21,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.2.0"
 types-requests = "^2.32.0.20250328"
+mypy = "^1.15.0"

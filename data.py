@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class HeadPhone:
+class Product:
     name: str
     price: int | float
     mpn: str
