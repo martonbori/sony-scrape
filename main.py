@@ -37,7 +37,7 @@ class ProductScraper:
             if ('price' in fp):
                 price = fp['price']['value']
             else:
-                price = 0
+                price = None
 
             product = Product(
                 name=fp['name'],
@@ -80,7 +80,7 @@ class ProductScraper:
         return self
 
 
-if __name__ == '__main__':
+def setup_logger():
     log.setLevel(logging.DEBUG)
 
     handler = logging.StreamHandler(sys.stdout)
@@ -91,6 +91,9 @@ if __name__ == '__main__':
 
     log.addHandler(handler)
 
+
+if __name__ == '__main__':
+    setup_logger()
     product_scraper = ProductScraper()
     product_scraper = product_scraper()
     product_scraper.export_to_csv('headphones.csv')

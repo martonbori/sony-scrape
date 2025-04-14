@@ -6,13 +6,15 @@ authors = [
     {name = "Bori Márton",email = "50830608+martonbori@users.noreply.github.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = [
     "requests (>=2.32.3,<3.0.0)",
     "mypy (>=1.15.0,<2.0.0)",
     "pandas (>=2.2.3,<3.0.0)"
 ]
 
+[tool.poetry]
+package-mode = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
